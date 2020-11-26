@@ -5,12 +5,12 @@
 
 
 #define DEFAULT_TABLE_SIZE 8
-#define RESIZE_THRESHOLD 0.5
+#define RESIZE_THRESHOLD 0.75
 
 
 typedef struct CELL {
-    uint32_t val;
     struct CELL *next;
+    uint32_t val;
 } cell_t;
 
 
