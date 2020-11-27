@@ -2,25 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-
-#define DEFAULT_TABLE_SIZE 8
-#define RESIZE_THRESHOLD 0.75
-
-
-typedef struct CELL {
-    struct CELL *next;
-    uint32_t val;
-} cell_t;
-
-
-typedef struct TABLE {
-    uint32_t count;
-    uint32_t total_size;
-    cell_t **cells;
-} table_t;
-
-void insert(table_t *, const uint32_t);
+#include "hash_table.h"
 
 
 table_t * create_table() {
@@ -118,25 +100,19 @@ bool contains(table_t *table, const uint32_t element) {
     return false; 
 }
 
-int main() {
-
-    table_t *table = create_table();
-    const uint32_t max_value = 100000000;
-    clock_t start = clock();
-    for (uint32_t i = 0; i < max_value; ++i) {
-        insert(table, i);
-    }
-    clock_t end = clock();
-    printf("Time for %d inserts: %f\n", max_value, ((double) (end - start)) / CLOCKS_PER_SEC);
+void clear(table_t *table) {
     
-    start = clock();
-    for (uint32_t i = 0; i < max_value; ++i) {
-        bool val = contains(table, i);
-        if (!val) {
-            printf("Error: Expected to find %d but didn't\n", i);
-            return -1;
+    for (uint32_t i = 0; i < table->total_size; ++i) {
+        cell_t *cell = table->cells[i];
+        cell_t *next_cell = cell;
+        while (cell != NULL) {
+            next_cell = cell->next;
+            free(cell);
+            cell = next_cell; 
         }
-    }
-    end = clock();
-    printf("Time for %d reads: %f\n", max_value, ((double) (end - start)) / CLOCKS_PER_SEC);
+    }    
+    free(table->cells);
+    table->count = 0;
+    table->total_size = 0;
 }
+
