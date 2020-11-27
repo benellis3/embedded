@@ -4,6 +4,8 @@
 #include <time.h>
 #include "hash_table.h"
 
+void _insert_cell(table_t *, cell_t *);
+
 
 table_t * create_table() {
     table_t *table = malloc(sizeof(table));
@@ -50,12 +52,38 @@ void _resize(table_t *table) {
     table->count = 0;
     for (int i = 0; i < table->total_size; ++i) {
         cell_t *cell = old_cells[i];
+        // compute the hash for the current value
+        cell_t *next_cell = cell;
         while (cell != NULL) {
-            insert(table, cell->val);
-            cell = cell->next;
+            next_cell = cell->next;
+            cell->next = NULL;
+            _insert_cell(table, cell);
+            cell = next_cell;
         }
+        /* while (cell != NULL) { */
+        /*     insert(table, cell->val); */
+        /*     cell = cell->next; */
+        /* } */
     }
     free(old_cells);
+}
+
+void _insert_cell(table_t *table, cell_t *new_cell) {
+    const uint32_t index = hash(new_cell->val);
+    cell_t *cell = table->cells[index % table->total_size];
+    cell_t *prev = cell;
+    while (cell != NULL) {
+        prev = cell;
+        cell = cell->next;
+    }
+    if (prev != NULL) {
+        prev->next = new_cell;
+    }
+    else {
+        table->cells[index % table->total_size] = new_cell;
+    }
+    table->count++;
+
 }
 
 void insert(table_t *table, const uint32_t element) {
@@ -71,21 +99,7 @@ void insert(table_t *table, const uint32_t element) {
     }
     new_cell->val = element;
     new_cell->next = NULL;
-    
-    const uint32_t index = hash(element);
-    cell_t *cell = table->cells[index % table->total_size];
-    cell_t *prev = cell;
-    while (cell != NULL) {
-        prev = cell;
-        cell = cell->next;
-    }
-    if (prev != NULL) {
-        prev->next = new_cell;
-    }
-    else {
-        table->cells[index % table->total_size] = new_cell;
-    }
-    table->count++;
+    _insert_cell(table, new_cell); 
 }
 
 bool contains(table_t *table, const uint32_t element) {
