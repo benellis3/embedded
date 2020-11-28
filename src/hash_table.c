@@ -4,6 +4,8 @@
 #include <time.h>
 #include "hash_table.h"
 
+void _insert_cell(table_t *, cell_t *, uint32_t);
+
 
 table_t * create_table() {
     table_t *table = malloc(sizeof(table));
@@ -50,9 +52,28 @@ void _resize(table_t *table) {
     table->count = 0;
     for (int i = 0; i < table->total_size; ++i) {
         cell_t *cell = old_cells[i];
+        cell_t *next_cell = cell;
+        bool first_iteration = true;
         while (cell != NULL) {
-            insert(table, cell->val);
-            cell = cell->next;
+            if (cell->count > 1 || !first_iteration) {
+                for (uint32_t j = 0; j < cell->count; ++j) {
+                    insert(table, cell->val[j]);
+                }
+                next_cell = cell->next;
+                free(cell);
+                cell = next_cell;
+            }
+            else {
+                // just copy the cell
+                // This is safe because there being only 1 element at that 
+                // location in the smaller table implies the same in the larger
+                // table.
+                cell_t *next_cell = cell->next;
+                table->cells[hash(cell->val[0]) % table->total_size] = cell;
+                cell->next = NULL;
+                cell = next_cell;
+            }
+            first_iteration = false;
         }
     }
     free(old_cells);
@@ -65,13 +86,6 @@ void insert(table_t *table, const uint32_t element) {
     else if (((double) table->count) / ((double) table->total_size) > RESIZE_THRESHOLD) {
         _resize(table);
     }
-    cell_t *new_cell = malloc(sizeof(cell_t));
-    if (new_cell == NULL) {
-        return;
-    }
-    new_cell->val = element;
-    new_cell->next = NULL;
-    
     const uint32_t index = hash(element);
     cell_t *cell = table->cells[index % table->total_size];
     cell_t *prev = cell;
@@ -79,11 +93,28 @@ void insert(table_t *table, const uint32_t element) {
         prev = cell;
         cell = cell->next;
     }
-    if (prev != NULL) {
-        prev->next = new_cell;
+    if (prev == NULL || prev->count == _CELL_SIZE) {
+        cell_t *new_cell = malloc(sizeof(cell_t));
+        if (new_cell == NULL) {
+            return;
+        }
+        new_cell->val[0] = element;
+        for (uint32_t i = 1; i < _CELL_SIZE; ++i) {
+            new_cell->val[i] = EMPTY;
+        }
+        new_cell->next = NULL;
+        new_cell->count = 1;
+        if (prev == NULL) {
+            table->cells[index % table->total_size] = new_cell;
+        }
+        else {
+            prev->next = new_cell;
+        }
     }
     else {
-        table->cells[index % table->total_size] = new_cell;
+        // we would have to change this if deletes were allowed
+        prev->val[prev->count] = element;
+        prev->count++;
     }
     table->count++;
 }
@@ -92,8 +123,13 @@ bool contains(table_t *table, const uint32_t element) {
     const uint32_t index = hash(element);
     cell_t *cell = table->cells[index % table->total_size];
     while (cell != NULL) {
-        if (cell->val == element) {
-            return true;
+        // inform the compiler that cell->count is in the range [1, 4]
+        if(cell->count < 1 || cell->count > _CELL_SIZE)
+            __builtin_unreachable();
+        for (uint32_t i = 0; i < cell->count; ++i) {
+            if (cell->val[i] == element) {
+                return true;
+            }
         }
         cell = cell->next;
     }

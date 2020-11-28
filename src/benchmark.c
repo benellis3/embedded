@@ -3,7 +3,7 @@
 #include <time.h>
 #include "hash_table.h"
 
-#define ORDERED_MAX_VALUE 1000000
+#define ORDERED_MAX_VALUE 10000000
 
 void time_ordered_insert(table_t *table) {
     clock_t start = clock();
@@ -63,8 +63,8 @@ int main() {
     clear(table);
     printf("Testing a read-heavy workload!\n");
     printf("================================\n");
-    time_random(table, 10000000, 256);
+    time_random(table, 100000000, 256);
     printf("Testing a write-heavy workload!\n");
     printf("=================================\n");
-    time_random(table, 256, 1000000);
+    time_random(table, 256, 10000000);
 }
