@@ -53,15 +53,27 @@ void _resize(table_t *table) {
     for (int i = 0; i < table->total_size; ++i) {
         cell_t *cell = old_cells[i];
         cell_t *next_cell = cell;
+        bool first_iteration = true;
         while (cell != NULL) {
-            for (uint32_t j = 0; j < _CELL_SIZE; ++j) {
-                if (cell->val[j] != EMPTY) {
+            if (cell->count > 1 || !first_iteration) {
+                for (uint32_t j = 0; j < cell->count; ++j) {
                     insert(table, cell->val[j]);
                 }
+                next_cell = cell->next;
+                free(cell);
+                cell = next_cell;
             }
-            next_cell = cell->next;
-            free(cell);
-            cell = next_cell;
+            else {
+                // just copy the cell
+                // This is safe because there being only 1 element at that 
+                // location in the smaller table implies the same in the larger
+                // table.
+                cell_t *next_cell = cell->next;
+                table->cells[hash(cell->val[0]) % table->total_size] = cell;
+                cell->next = NULL;
+                cell = next_cell;
+            }
+            first_iteration = false;
         }
     }
     free(old_cells);
@@ -111,7 +123,10 @@ bool contains(table_t *table, const uint32_t element) {
     const uint32_t index = hash(element);
     cell_t *cell = table->cells[index % table->total_size];
     while (cell != NULL) {
-        for (uint32_t i = 0; i < _CELL_SIZE; ++i) {
+        // inform the compiler that cell->count is in the range [1, 4]
+        if(cell->count < 1 || cell->count > _CELL_SIZE)
+            __builtin_unreachable();
+        for (uint32_t i = 0; i < cell->count; ++i) {
             if (cell->val[i] == element) {
                 return true;
             }

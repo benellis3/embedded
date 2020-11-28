@@ -5,11 +5,11 @@
 #include <stdbool.h>
 
 #define DEFAULT_TABLE_SIZE 8
-#define RESIZE_THRESHOLD 0.75
+#define RESIZE_THRESHOLD 0.5
 
 // Want the cell values to be the size of a
 // cache line, which on this pc is 64 bytes.
-#define _CELL_SIZE 8
+#define _CELL_SIZE 4
 #define EMPTY UINT32_MAX
 
 typedef struct CELL {
