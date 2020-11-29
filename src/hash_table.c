@@ -56,6 +56,8 @@ void _resize(table_t *table) {
         bool first_iteration = true;
         while (cell != NULL) {
             if (cell->count > 1 || !first_iteration) {
+                if (cell->count > _CELL_SIZE)
+                    __builtin_unreachable();
                 for (uint32_t j = 0; j < cell->count; ++j) {
                     insert(table, cell->val[j]);
                 }
