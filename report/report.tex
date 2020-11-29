@@ -4,7 +4,7 @@
 \usepackage{parskip}
 \usepackage{graphicx}
 \usepackage{minted}
-
+\usepackage{booktabs}
 \graphicspath{ {../figures/} }
 
 \begin{document}
@@ -69,4 +69,24 @@ list to the end before adding a new cell there. Checking a value is present in t
 checks for the presence of the value rather than inserting a new one. The only wrinkle is resizing the table. When the 
 table reaches above a certain occupancy, it is doubled in size to retain performance. This is done by finding the 
 correct index in the new table at which to insert the new value, and copying the cell to the end of the linked list.
+
+I implemented a few simple tests to benchmark the performance of this data structure. The first inserted the integers
+in the range $[0, 10^7)$ in order into the table, and then read them out in order. The results are shown in the 
+Ordered Write and Ordered Read columns of Table~\ref{tab:perf} respectively. The second set of tests inserts some random
+numbers into the table and reads either one of these numbers or a random number. The choice of whether to read a number 
+that is in the table or one that is likely not is chosen at random. One test of this type inserts $256$ integers 
+and reads $10^7$ times, and the other does the opposite, writing $10^7$ integers and reading $256$ times. These are 
+listed in Table~\ref{tab:perf} as Random Read and Random Write respectively. 
+
+\begin{table}
+    \begin{tabular}{ccccc} \toprule
+        Algorithm & Ordered Write (s) & Ordered Read (s) & Random Read (s) & Random Write (s) \\
+        Chaining & $4.34 \pm 0.04$ & $\mathbf{0.34 \pm 0.03}$ & $1.94 \pm 0.02$ & $4.21 \pm 0.05$ \\
+        Multi-element Chaining & $\mathbf{3.49 \pm 0.07}$ & $0.479 \pm 0.005$ & $\mathbf{1.88 \pm 0.03}$ & $\mathbf{3.43 \pm 0.02}$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Results of benchmarking the different algorithms. Best results are in bold.}
+    \label{tab:perf}
+\end{table}
+
 \end{document}
