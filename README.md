@@ -17,3 +17,10 @@ cd src/ && make all && ./hash-table
 ```
 
 You can then run `git checkout master` and `make all && ./hash-table` to benchmark the results for the multi-element chaining table.
+
+All benchmarking was done on a 2020 Macbook Pro (2.3 GHz 8-core Intel i9, 16GB RAM) so results may vary on your machine. To produce your
+own traces you can run
+```bash
+xcrun xctrace --template "Time Profiler" --launch ./hash-table
+```
+provided that XCode is installed.
